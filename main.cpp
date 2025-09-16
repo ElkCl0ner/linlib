@@ -1,41 +1,30 @@
 #include <iostream>
-#include <string>
+#include <thread>
+#include <sys/socket.h>
+#include <poll.h>
 
-#include "tcp_client.hpp"
-#include "tcp_server.hpp"
-
-void handleData(const char* clientIp, uint16_t clientPort, const char* data, const size_t dataSize)
-{
-    printf("Received %d bytes from %s:%hu : %s\n",
-       dataSize,
-       clientIp,
-       clientPort,
-       data
-    );
-}
+#include "socket_server.hpp"
 
 int main(int argc, char* argv[])
 {
-    std::string serverIp("127.0.0.1");
-    uint16_t serverPort = 8888;
+    std::thread t_tcpServer = ll::startTcpServer(
+        8888,
+        [](struct pollfd* clientPollfd) { printf("[TCP] Client connected: %d\n", clientPollfd->fd); },
+        [](const int clientSockfd) { printf("[TCP] Client disconnected: %d\n", clientSockfd); },
+        [](struct pollfd* clientPollfd, char* data, int dataSize) { printf("[TCP] %d bytes received from %d: %.*s\n", dataSize, clientPollfd->fd, dataSize, data); },
+        [](struct pollfd* clientPollfd) {}
+    );
 
-    auto c = lin::TcpClient::createFromIPv4(serverIp, serverPort);
-    if (!c)
-    {
-        std::cout << "nope\n";
-    }
-    char* msg = "wasd hahaha";
-    c->sendData(msg, 11);
-    c->sendData("wasd123asdfqwerty", 17);
-    
-    // auto s = lin::TcpServer::createOnPort("8888");
-    // if (!s)
-    // {
-    //     std::cout << "nope\n";
-    //     return 1;
-    // }
-    // s->setCallback(handleData);
-    // s->start();
+    int serverUdpSockfd;
+    std::thread t_udpServer = ll::startUdpServer(
+        8888,
+        [](struct sockaddr_in* clientAddr, char* data, int dataSize) { printf("[UDP] %d bytes received: %.*s\n", dataSize, dataSize, data); },
+        &serverUdpSockfd
+    );
+
+    t_tcpServer.join();
+    t_udpServer.join();
+
     return 0;
 }
 
