@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "defines.hpp"
+
 std::thread ll::startTcpServer(
     uint16_t port,
     void (*onClientConnected)(struct pollfd* clientPollfd),
