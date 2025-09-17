@@ -7,23 +7,35 @@
 
 int main(int argc, char* argv[])
 {
-    std::thread t_tcpServer = ll::startTcpServer(
+    // std::thread t_tcpServer = ll::startTcpServer(
+    //     8888,
+    //     [](struct pollfd* clientPollfd) { printf("[TCP] Client connected: %d\n", clientPollfd->fd); },
+    //     [](const int clientSockfd) { printf("[TCP] Client disconnected: %d\n", clientSockfd); },
+    //     [](struct pollfd* clientPollfd, char* data, int dataSize) { printf("[TCP] %d bytes received from %d: %.*s\n", dataSize, clientPollfd->fd, dataSize, data); },
+    //     [](struct pollfd* clientPollfd) {}
+    // );
+    //
+    // int serverUdpSockfd;
+    // std::thread t_udpServer = ll::startUdpServer(
+    //     8888,
+    //     [](struct sockaddr_in* clientAddr, char* data, int dataSize) { printf("[UDP] %d bytes received: %.*s\n", dataSize, dataSize, data); },
+    //     &serverUdpSockfd
+    // );
+
+    int serverUdpSockfd2;
+    std::thread t_tcpAndUdpServer = ll::startTcpAndUdpServer(
         8888,
         [](struct pollfd* clientPollfd) { printf("[TCP] Client connected: %d\n", clientPollfd->fd); },
         [](const int clientSockfd) { printf("[TCP] Client disconnected: %d\n", clientSockfd); },
         [](struct pollfd* clientPollfd, char* data, int dataSize) { printf("[TCP] %d bytes received from %d: %.*s\n", dataSize, clientPollfd->fd, dataSize, data); },
-        [](struct pollfd* clientPollfd) {}
-    );
-
-    int serverUdpSockfd;
-    std::thread t_udpServer = ll::startUdpServer(
-        8888,
+        [](struct pollfd* clientPollfd) {},
         [](struct sockaddr_in* clientAddr, char* data, int dataSize) { printf("[UDP] %d bytes received: %.*s\n", dataSize, dataSize, data); },
-        &serverUdpSockfd
+        &serverUdpSockfd2
     );
 
-    t_tcpServer.join();
-    t_udpServer.join();
+    // t_tcpServer.join();
+    // t_udpServer.join();
+    t_tcpAndUdpServer.join();
 
     return 0;
 }

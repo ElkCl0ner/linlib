@@ -32,10 +32,11 @@ namespace ll
     );
     std::thread startTcpAndUdpServer(
         uint16_t port,
-        void (*onClientConnected)(const int clientSockfd),
-        void (*onClientDisconnected)(const int clientSockfd),
-        void (*onTcpPacket)(const int clientSockfd, char* data, int dataSize),
-        void (*onUdpPacket)(char* data, int dataSize),
+        void (*onTcpClientConnected)(struct pollfd* clientPollfd),
+        void (*onTcpClientDisconnected)(const int clientSockfd),
+        void (*onRecvTcpPacket)(struct pollfd* clientPollfd, char* data, int dataSize),
+        void (*onSendTcpPacket)(struct pollfd* clientPollfd),
+        void (*onRecvUdpPacket)(struct sockaddr_in* clientAddr, char* data, int dataSize),
         int* outServerUdpSockfd
     );
 }
