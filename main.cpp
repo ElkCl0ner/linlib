@@ -2,6 +2,7 @@
 #include <thread>
 #include <sys/socket.h>
 #include <poll.h>
+#include <string>
 
 #include "socket_server.hpp"
 #include "socket_client.hpp"
@@ -38,16 +39,17 @@ int main(int argc, char* argv[])
     // // t_udpServer.join();
     // t_tcpAndUdpServer.join();
 
-    // int clientTcpSockfd;
-    // std::thread t_tcpClient = ll::startTcpClient(
-    //     "127.0.0.1",
-    //     8888,
-    //     [](char* data, int dataSize) { printf("[TCP] %d bytes received: %.*s\n", dataSize, dataSize, data); },
-    //     clientTcpSockfd
-    // );
-    // send(clientTcpSockfd, "hello world", 11, 0);
+    struct pollfd* tcpPollfd;
+    std::thread t_tcpClient = ll::startTcpClient(
+        "127.0.0.1",
+        8888,
+        [](struct pollfd& tcpPollfd, char* data, int dataSize) { printf("[TCP] %d bytes received: %.*s\n", dataSize, dataSize, data); },
+        [](struct pollfd& tcpPollfd) {  },
+        &tcpPollfd
+    );
+    send(tcpPollfd->fd, "hello world", 11, 0);
 
-    // t_tcpClient.join();
+    t_tcpClient.join();
 
     // int clientUdpSockfd;
     // struct sockaddr udpServerAddr;

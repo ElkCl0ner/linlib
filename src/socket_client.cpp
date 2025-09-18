@@ -11,13 +11,13 @@
 std::thread ll::startTcpClient(
     const char* serverIp,
     const uint16_t serverPort,
-    void (*onRecvTcpPacket)(char* data, int dataSize),
-    void (*onSendTcpPacket)(struct pollfd* tcpPollfd),
-    struct pollfd* outTcpPollfd
+    void (*onRecvTcpPacket)(struct pollfd& tcpPollfd, char* data, int dataSize),
+    void (*onSendTcpPacket)(struct pollfd& tcpPollfd),
+    struct pollfd** outTcpPollfd
 )
 {
-    outTcpPollfd->fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (outTcpPollfd->fd < 0)
+    (*outTcpPollfd)->fd = socket(AF_INET, SOCK_STREAM, 0);
+    if ((*outTcpPollfd)->fd < 0)
     {
         throw std::runtime_error("a");
     }
@@ -31,7 +31,7 @@ std::thread ll::startTcpClient(
         throw std::runtime_error("a");
     }
 
-    if (connect(outTcpPollfd->fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) < 0)
+    if (connect((*outTcpPollfd)->fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) < 0)
     {
         throw std::runtime_error("a");
     }
@@ -40,7 +40,7 @@ std::thread ll::startTcpClient(
     {
         while (1)
         {
-            int numEvents = poll(outTcpPollfd, 1, -1);
+            int numEvents = poll((*outTcpPollfd), 1, -1);
 
             if (numEvents <= 0)
             {
@@ -48,24 +48,24 @@ std::thread ll::startTcpClient(
                 return;
             }
 
-            if (outTcpPollfd->revents & POLLIN)
+            if ((*outTcpPollfd)->revents & POLLIN)
             {
                 char data[LL_BUFFER_SIZE];
-                int bytesReceived = recv(outTcpPollfd->fd, data, LL_BUFFER_SIZE, 0);
+                int bytesReceived = recv((*outTcpPollfd)->fd, data, LL_BUFFER_SIZE, 0);
 
                 if (bytesReceived <= 0)
                 {
                     printf("d\n");
-                    close(outTcpPollfd->fd);
+                    close((*outTcpPollfd)->fd);
                     return;
                 }
 
-                onRecvTcpPacket(data, bytesReceived);
+                onRecvTcpPacket((**outTcpPollfd), data, bytesReceived);
             }
 
-            if (outTcpPollfd->revents & POLLOUT)
+            if ((*outTcpPollfd)->revents & POLLOUT)
             {
-                onSendTcpPacket(outTcpPollfd);
+                onSendTcpPacket(**outTcpPollfd);
             }
         }
     });
@@ -114,10 +114,10 @@ std::thread ll::startUdpClient(
 std::thread ll::startTcpAndUdpClient(
     const char* serverIp,
     const uint16_t serverPort,
-    void (*onRecvTcpPacket)(char* data, int dataSize),
-    void (*onSendTcpPacket)(struct pollfd* tcpPollfd),
+    void (*onRecvTcpPacket)(struct pollfd& tcpPollfd, char* data, int dataSize),
+    void (*onSendTcpPacket)(struct pollfd& tcpPollfd),
     void (*onRecvUdpPacket)(char* data, int dataSize),
-    struct pollfd* outTcpPollfd
+    struct pollfd** outTcpPollfd,
     int& outUdpSockfd,
     struct sockaddr& outUdpServerAddr
 )

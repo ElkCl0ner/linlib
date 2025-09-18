@@ -4,6 +4,8 @@
 #include <poll.h>
 #include <thread>
 
+#include "defines.hpp"
+
 namespace ll
 {
     std::thread startTcpClient(
@@ -30,5 +32,29 @@ namespace ll
         int& outUdpSockfd,
         struct sockaddr& outUdpServerAddr
     );
+
+    struct ClientSocket
+    {
+        int socktype;  // SOCK_DGRAM or SOCK_STREAM
+    };
+
+    class ClientSocketsManager
+    {
+    private:
+        static ClientSocketsManager manager;
+
+        std::thread t_poll;
+        struct pollfd fds[LL_MAX_POLLFDS];
+        struct ClientSocket clients[LL_MAX_POLLFDS];
+        uint32_t numConnections;
+
+        ClientSocketsManager() = default;  // Private constructor
+        ClientSocketsManager(const ClientSocketsManager&) = delete;  // Prevent copying
+        ClientSocketsManager& operator=(const ClientSocketsManager&) = delete;  // Prevent assignment
+
+
+    public:
+        static ClientSocketsManager& getManager();
+    };
 }
 
