@@ -65,7 +65,9 @@ void ll::UdpServer::start(
     std::function<void(const struct sockaddr_in& clientAddr, char* data, uint32_t dataSize)> onRecvPacket
 )
 {
-    std::cout << "UDP server listenong on some port...\n";
+    std::cout << "UDP server listening on some port...\n";
+
+    this->running = true;
 
     this->thread = std::thread([running = &(this->running), pfd = &(this->pfd), onRecvPacket]()
     {
@@ -76,11 +78,6 @@ void ll::UdpServer::start(
             {
                 std::cerr << "[ERROR] ll::UdpServer poll() failed.\n";
                 return;
-            }
-
-            if (numEvents == 0)
-            {
-                continue;
             }
 
             if (pfd[0].revents & POLLIN)
